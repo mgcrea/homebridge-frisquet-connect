@@ -125,12 +125,12 @@ export default class FrisquetConnectController extends EventEmitter {
     }
 
     zones.forEach(zone => {
-      const {id, identifiant, nom} = zone;
+      const {id, identifiant, nom: name} = zone;
       const deviceId = identifiant;
       this.devices.add(deviceId);
       const accessoryId = this.getAccessoryId(deviceId);
       const context: FrisquetConnectAccessoryContext = {
-        name: nom,
+        name,
         deviceId,
         accessoryId,
         manufacturer: 'Frisquet',
