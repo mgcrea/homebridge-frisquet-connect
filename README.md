@@ -66,14 +66,11 @@
 
 ### Configurations
 
-| **Field** | **Description**             |
-| --------- | --------------------------- |
-| hostname  | Tydom hostname              |
-| username  | Tydom username              |
-| password  | Tydom password              |
-| settings  | Device settings (overrides) |
-
-- The `settings` field enables you to override the name or homekit category of your Tydom device (check homebridge log for the device ids).
+| **Field** | **Description**                   |
+| --------- | --------------------------------- |
+| hostname  | Frisquet Connect hostname         |
+| username  | Frisquet Connect username (email) |
+| password  | Frisquet Connect password         |
 
 ### Debug
 
