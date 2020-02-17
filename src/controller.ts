@@ -107,10 +107,11 @@ export default class FrisquetConnectController extends EventEmitter {
     const externalTemp = get(environnement, 'T_EXT', null);
     if (externalTemp) {
       const deviceId = 'T_EXT';
+      const name = 'Sonde extérieure';
       this.devices.add(deviceId);
       const accessoryId = this.getAccessoryId(deviceId);
       const context: FrisquetConnectAccessoryContext = {
-        name: 'Sonde extérieure',
+        name,
         deviceId,
         accessoryId,
         manufacturer: 'Frisquet',
