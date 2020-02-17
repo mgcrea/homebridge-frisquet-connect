@@ -38,7 +38,7 @@
   "description": "This file keeps track of which plugins should be installed.",
   "dependencies": {
     "homebridge-dummy": "^0.4.0",
-    "homebridge-frisquet-connect": "^0.2.0"
+    "homebridge-frisquet-connect": "^0.2.1"
   }
 }
 ```
