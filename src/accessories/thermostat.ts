@@ -57,10 +57,17 @@ export const setupThermostat = (accessory: PlatformAccessory, controller: Frisqu
     .setProps({validValues: [0, 1]} as Partial<CharacteristicProps>) // [OFF, HEAT, COOL, AUTO]
     .on(CharacteristicEventTypes.GET, async (callback: NodeCallback<CharacteristicValue>) => {
       debug(`-> GET TargetHeatingCoolingState for "${id}"`);
+      const HEATING_MODES = [
+        6, // normal
+        7 // réduit
+      ];
       try {
         const {carac_zone: settings} = await controller.getZone(deviceId);
         assert(settings.MODE, 'Missing `carac_zone.MODE` value');
-        callback(null, settings.MODE === 6 ? TargetHeatingCoolingState.HEAT : TargetHeatingCoolingState.OFF);
+        callback(
+          null,
+          HEATING_MODES.includes(settings.MODE) ? TargetHeatingCoolingState.HEAT : TargetHeatingCoolingState.OFF
+        );
       } catch (err) {
         callback(err);
       }
