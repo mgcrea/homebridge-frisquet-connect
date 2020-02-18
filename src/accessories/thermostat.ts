@@ -42,7 +42,7 @@ export const setupThermostat = (accessory: PlatformAccessory, controller: Frisqu
         assert(settings.TAMB, 'Missing `carac_zone.TAMB` value');
         callback(
           null,
-          settings.CAMB < settings.TAMB - HEATING_DELTA
+          settings.CAMB > settings.TAMB + HEATING_DELTA
             ? CurrentHeatingCoolingState.HEAT
             : CurrentHeatingCoolingState.OFF
         );
