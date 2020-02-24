@@ -37,7 +37,7 @@ const clientFactory = (log: typeof console, config: FrisquetConnectPlatformConfi
             const updatedOptions = setUpdatedOptions(token);
             // Make a new retry
             return retryWithMergedOptions(updatedOptions);
-          } else if (response.statusCode !== 200) {
+          } else if (![200, 201].includes(response.statusCode)) {
             log.warn(`Encountered an UnknownError with statusCode="${response.statusCode}"`);
           }
 
