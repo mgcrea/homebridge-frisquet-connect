@@ -34,14 +34,7 @@ const clientFactory = (log: typeof console, config: FrisquetConnectPlatformConfi
             log.warn(`Encountered an UnauthorizedError with statusCode="${response.statusCode}"`);
             // Attempt a new login
             const {token} = await instance.login();
-            // Prepare updated options
-            const updatedOptions = {
-              searchParams: {
-                token
-              }
-            };
-            // Save for further requests
-            instance.defaults.options = got.mergeOptions(instance.defaults.options, updatedOptions);
+            const updatedOptions = setUpdatedOptions(token);
             // Make a new retry
             return retryWithMergedOptions(updatedOptions);
           } else if (response.statusCode !== 200) {
@@ -62,6 +55,18 @@ const clientFactory = (log: typeof console, config: FrisquetConnectPlatformConfi
     mutableDefaults: true
   }) as Client;
 
+  const setUpdatedOptions = (token: string) => {
+    // Prepare updated options
+    const updatedOptions = {
+      searchParams: {
+        token
+      }
+    };
+    // Save for further requests
+    instance.defaults.options = got.mergeOptions(instance.defaults.options, updatedOptions);
+    return updatedOptions;
+  };
+
   instance.login = async () => {
     const searchParams = {appId: DEFAULT_APP_ID};
     const {body} = await instance.post('authentifications', {
@@ -74,6 +79,7 @@ const clientFactory = (log: typeof console, config: FrisquetConnectPlatformConfi
       searchParams
     });
     assert(body.token, 'Unexpected missing token in body response');
+    setUpdatedOptions(body.token);
     return body;
   };
 

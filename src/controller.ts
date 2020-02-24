@@ -41,12 +41,9 @@ export default class FrisquetConnectController extends EventEmitter {
   }
 
   async getSite(): Promise<SiteResponse> {
-    const {token, siteId} = this.config;
-    const searchParams = {token};
+    const {siteId} = this.config;
     this.siteTime = Date.now();
-    this.sitePromise = this.client.get(`sites/${siteId}`, {
-      searchParams
-    });
+    this.sitePromise = this.client.get(`sites/${siteId}`);
     const {body} = await this.sitePromise;
     return body as SiteResponse;
   }
@@ -71,10 +68,9 @@ export default class FrisquetConnectController extends EventEmitter {
     return `FrisquetConnect:${siteId.slice(6)}:accessories:${deviceId}`;
   }
   async scan() {
-    const {token, utilisateur} = await this.client.login();
+    const {utilisateur} = await this.client.login();
     const siteId = get(utilisateur, `sites.${SITE_INDEX}.identifiant_chaudiere`, '') as string;
     assert(siteId, 'Unexpected missing "siteId" in login response');
-    this.config.token = token;
     this.config.siteId = siteId;
     const {environnement, zones} = await this.getSite();
 
