@@ -1,5 +1,3 @@
-import {Got} from 'got';
-
 export type SiteResponse = {
   environnement: {
     T_EXT?: number;
