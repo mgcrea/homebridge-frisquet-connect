@@ -1,7 +1,5 @@
 import {Got} from 'got';
 
-export type FrisqueConnectClient = Got;
-
 export type SiteResponse = {
   environnement: {
     T_EXT?: number;

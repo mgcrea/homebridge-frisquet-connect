@@ -1,12 +1,11 @@
 import {EventEmitter} from 'events';
-import got, {CancelableRequest, Response} from 'got';
+import {CancelableRequest, Response} from 'got';
 import {Categories} from 'hap-nodejs';
 import {get} from 'lodash';
 import assert from 'src/utils/assert';
-import debug from 'src/utils/debug';
-import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT} from './config/env';
+import frisquetConnectClientFactory, {Client as FrisqueConnectClient} from './client';
 import {FrisquetConnectPlatformConfig} from './platform';
-import {FrisqueConnectClient, SiteResponse, Zone} from './typings/frisquetConnect';
+import {SiteResponse, Zone} from './typings/frisquetConnect';
 
 const SITE_INDEX = 0;
 const DEBOUNCE_TIME = 10 * 1e3;
@@ -38,33 +37,7 @@ export default class FrisquetConnectController extends EventEmitter {
     this.config = config;
     this.log = log;
     this.devices = new Set();
-    const {hostname = DEFAULT_HOSTNAME, username, password} = config;
-    assert(hostname, 'Missing "hostname" config field for platform');
-    assert(username, 'Missing "username" config field for platform');
-    assert(password, 'Missing "password" config field for platform');
-    debug(`Creating FrisquetConnect client with username="${username}" and hostname="${hostname}"`);
-    this.client = got.extend({
-      prefixUrl: hostname,
-      headers: {
-        'user-agent': DEFAULT_USER_AGENT
-      },
-      responseType: 'json'
-    });
-  }
-
-  async login() {
-    const {username, password} = this.config;
-    const searchParams = {appId: DEFAULT_APP_ID};
-    const {body} = await this.client.post('authentifications', {
-      json: {
-        locale: 'fr',
-        email: username,
-        password,
-        type_client: 'IOS' // eslint-disable-line @typescript-eslint/camelcase
-      },
-      searchParams
-    });
-    return body;
+    this.client = frisquetConnectClientFactory(log, config);
   }
 
   async getSite(): Promise<SiteResponse> {
@@ -98,8 +71,9 @@ export default class FrisquetConnectController extends EventEmitter {
     return `FrisquetConnect:${siteId.slice(6)}:accessories:${deviceId}`;
   }
   async scan() {
-    const {token, utilisateur} = await this.login();
-    const siteId = get(utilisateur, `sites.${SITE_INDEX}.identifiant_chaudiere`, null);
+    const {token, utilisateur} = await this.client.login();
+    const siteId = get(utilisateur, `sites.${SITE_INDEX}.identifiant_chaudiere`, '') as string;
+    assert(siteId, 'Unexpected missing "siteId" in login response');
     this.config.token = token;
     this.config.siteId = siteId;
     const {environnement, zones} = await this.getSite();
