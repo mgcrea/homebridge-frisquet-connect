@@ -7,7 +7,6 @@ import frisquetConnectClientFactory, {Client as FrisqueConnectClient} from './cl
 import {FrisquetConnectPlatformConfig} from './platform';
 import {SiteResponse, Zone} from './typings/frisquetConnect';
 import {HomebridgeLog} from './typings/homebridge';
-import {dir} from './utils/debug';
 
 const SITE_INDEX = 0;
 const DEBOUNCE_TIME = 10 * 1e3;

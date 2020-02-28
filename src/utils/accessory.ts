@@ -133,7 +133,7 @@ export const setupAccessoryTemperatureHistoryService = (
         controller.log.debug(`Accessory named="${accessory.displayName}" has added entry="${JSON.stringify(entry)}"`);
       }
     });
-  }, historyInterval * 1000);
+  }, Math.max(5, historyInterval) * 1000);
   // Setup cleanup
   process.on('SIGINT', () => {
     clearInterval(historyIntervalId);
