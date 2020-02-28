@@ -1,6 +1,8 @@
 import Hap, {Accessory, Categories, Service} from 'hap-nodejs';
 import {EventEmitter} from 'events';
 
+export type HomebridgeLog = Console & typeof console['log'];
+
 export interface HomebridgeApi extends EventEmitter {
   // _accessories: Record<string, unknown>;
   // _platforms: Record<string, unknown>;
@@ -28,10 +30,12 @@ export interface Platform {
 }
 
 declare class PlatformAccessory extends EventEmitter {
+  log: HomebridgeLog;
   UUID: string;
   displayName: string;
   context: Record<string, unknown>;
   category: Categories;
+  services: Service[];
   _associatedHAPAccessory: Accessory;
   constructor(displayName: string, UUID: string, category?: Categories);
   addService(service: Service | typeof Service, ...constructorArgs: any[]): Service;

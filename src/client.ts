@@ -1,14 +1,15 @@
-import got, {Got} from 'got';
-import {FrisquetConnectPlatformConfig} from './platform';
-import {DEFAULT_USER_AGENT, DEFAULT_APP_ID, DEFAULT_HOSTNAME} from './config/env';
 import assert from 'assert';
+import got, {Got} from 'got';
 import debug from 'src/utils/debug';
+import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT} from './config/env';
+import {FrisquetConnectPlatformConfig} from './platform';
+import {HomebridgeLog} from './typings/homebridge';
 
 export type Client = Got & {
   login: () => Promise<{token: string; utilisateur: Record<string, unknown>}>;
 };
 
-const clientFactory = (log: typeof console, config: FrisquetConnectPlatformConfig): Client => {
+const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig): Client => {
   const {hostname = DEFAULT_HOSTNAME, username, password} = config;
   assert(hostname, 'Missing "hostname" config field for platform');
   assert(username, 'Missing "username" config field for platform');

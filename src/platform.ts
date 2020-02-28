@@ -1,31 +1,34 @@
 import {Categories} from 'hap-nodejs';
-import {PLATFORM_NAME, PLUGIN_NAME} from './config/env';
+import {PLATFORM_NAME, PLUGIN_NAME, DEFAULT_HISTORY_INTERVAL} from './config/env';
 import FrisquetConnectController, {ControllerDevicePayload, FrisquetConnectAccessoryContext} from './controller';
-import {HomebridgeApi, Platform, PlatformAccessory} from './typings/homebridge';
+import {HomebridgeApi, Platform, PlatformAccessory, HomebridgeLog} from './typings/homebridge';
 import {getFrisquetConnectAccessorySetup} from './utils/accessory';
+import {FakeGatoHistoryService} from 'fakegato-history';
 
 export type FrisquetConnectPlatformConfig = {
   platform: string;
   hostname: string;
   username: string;
   password: string;
-  token: string;
   siteId: string;
   settings: Record<string, {name?: string; category?: Categories}>;
+  historyDisabled: boolean;
+  historyInterval: number;
 };
 
 export default class FrisquetConnectPlatform implements Platform {
+  static HistoryService: FakeGatoHistoryService | null = null;
   cleanupAccessoriesIds: Set<string>;
   accessories: Map<string, PlatformAccessory>;
   controller?: FrisquetConnectController;
   api: HomebridgeApi;
   config: FrisquetConnectPlatformConfig;
   disabled: boolean = false;
-  log: typeof console;
+  log: HomebridgeLog;
 
-  constructor(log: typeof console, config: FrisquetConnectPlatformConfig, api: HomebridgeApi) {
+  constructor(log: HomebridgeLog, config: FrisquetConnectPlatformConfig, api: HomebridgeApi) {
     // Expose args
-    this.config = config;
+    this.config = Object.assign({historyInterval: DEFAULT_HISTORY_INTERVAL, historyDisabled: false}, config);
     this.log = log;
     this.api = api;
     // Internal
@@ -38,7 +41,7 @@ export default class FrisquetConnectPlatform implements Platform {
       return;
     }
 
-    this.controller = new FrisquetConnectController(log, config) as FrisquetConnectController;
+    this.controller = new FrisquetConnectController(log, this.config) as FrisquetConnectController;
     // Prevent configureAccessory getting called after node ready
     this.api.on('didFinishLaunching', () => setTimeout(() => this.didFinishLaunching(), 16));
     this.controller.on('connect', () => {
@@ -80,11 +83,12 @@ export default class FrisquetConnectPlatform implements Platform {
     return accessory;
   }
   updateAccessory(accessory: PlatformAccessory, context: FrisquetConnectAccessoryContext) {
+    const {HistoryService} = FrisquetConnectPlatform;
     const {displayName: name, UUID: id} = accessory;
     this.log.info(`Updating accessory named="${name}" with id="${id}"`);
     Object.assign(accessory.context, context);
     const FrisquetConnectAccessorySetup = getFrisquetConnectAccessorySetup(accessory);
-    FrisquetConnectAccessorySetup(accessory, this.controller!);
+    FrisquetConnectAccessorySetup(accessory, this.controller!, HistoryService as FakeGatoHistoryService);
     this.api.updatePlatformAccessories([accessory]);
   }
   // Called by homebridge with existing cached accessories

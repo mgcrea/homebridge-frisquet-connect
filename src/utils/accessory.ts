@@ -1,17 +1,31 @@
-import {AccessoryEventTypes, Categories, Characteristic, Service, VoidCallback} from 'hap-nodejs';
+import assert from 'assert';
+import {FakeGatoHistoryService} from 'fakegato-history';
+import {
+  AccessoryEventTypes,
+  Categories,
+  Characteristic,
+  CharacteristicEventTypes,
+  Service,
+  VoidCallback
+} from 'hap-nodejs';
 import {setupTemperatureSensor} from 'src/accessories/temperatureSensor';
 import {setupThermostat} from 'src/accessories/thermostat';
 import FrisquetConnectController, {FrisquetConnectAccessoryContext} from 'src/controller';
 import {PlatformAccessory} from 'src/typings/homebridge';
-import assert from 'src/utils/assert';
 import debug from 'src/utils/debug';
+
+type AddAccessoryOptions = {
+  name?: string;
+  subtype?: string;
+  removeExisting?: boolean;
+};
 
 export const addAccessoryService = (
   accessory: PlatformAccessory,
   service: Service | typeof Service,
-  name: string,
-  removeExisting: boolean = false
+  options: AddAccessoryOptions = {}
 ) => {
+  const {name, subtype, removeExisting = true} = options;
   const existingService = accessory.getService(service);
   if (existingService) {
     if (!removeExisting) {
@@ -19,10 +33,31 @@ export const addAccessoryService = (
     }
     accessory.removeService(existingService);
   }
-  return accessory.addService(service, name);
+  return accessory.addService(service, name, subtype);
 };
 
-type FrisquetConnectAccessorySetup = (accessory: PlatformAccessory, controller: FrisquetConnectController) => void;
+export const addAccessoryServiceWithSubtype = (
+  accessory: PlatformAccessory,
+  service: typeof Service,
+  options: AddAccessoryOptions = {}
+) => {
+  const {name, subtype, removeExisting = true} = options;
+  const existingService = accessory.getServiceByUUIDAndSubType(service, subtype);
+  console.dir({existingService});
+  if (existingService) {
+    if (!removeExisting) {
+      return existingService;
+    }
+    accessory.removeService(existingService);
+  }
+  return accessory.addService(service, name, subtype);
+};
+
+type FrisquetConnectAccessorySetup = (
+  accessory: PlatformAccessory,
+  controller: FrisquetConnectController,
+  HistoryService?: FakeGatoHistoryService
+) => void;
 
 export const getFrisquetConnectAccessorySetup = (accessory: PlatformAccessory): FrisquetConnectAccessorySetup => {
   const {category} = accessory;
@@ -61,6 +96,47 @@ export const setupAccessoryIdentifyHandler = (
     debug({id, type: 'AccessoryEventTypes.IDENTIFY', paired});
     debug(`New identify request for device named="${name}" with id="${id}"`);
     callback();
+  });
+};
+
+export const setupAccessoryTemperatureHistoryService = (
+  accessory: PlatformAccessory,
+  controller: FrisquetConnectController,
+  service: Service,
+  HistoryService?: FakeGatoHistoryService
+): void => {
+  const {historyDisabled, historyInterval} = controller.config;
+  if (historyDisabled) {
+    controller.log.warn(`Accessory named="${accessory.displayName}" history is disabled`);
+    return;
+  }
+  assert(HistoryService);
+  // Setup history
+  controller.log.info(
+    `Setting up accessory named="${accessory.displayName}" history with interval=${historyInterval}s`
+  );
+  // @ts-ignore
+  const historyService = new (HistoryService as FakeGatoHistoryService)('weather', accessory, {
+    storage: 'fs'
+  });
+  const historyIntervalId = setInterval(() => {
+    controller.log.info(`Accessory named="${accessory.displayName}" is performing an history update`);
+    const currentTemperature = service.getCharacteristic(Characteristic.CurrentTemperature) as Characteristic;
+    currentTemperature.emit(CharacteristicEventTypes.GET, (err: Error | null, value: number) => {
+      if (err || typeof value === 'undefined') {
+        return;
+      }
+      if (value) {
+        const time = Math.floor(Date.now() / 1000);
+        const entry = {time, temp: value, pressure: 0, humidity: 0};
+        historyService.addEntry(entry);
+        controller.log.debug(`Accessory named="${accessory.displayName}" has added entry="${JSON.stringify(entry)}"`);
+      }
+    });
+  }, historyInterval * 1000);
+  // Setup cleanup
+  process.on('SIGINT', () => {
+    clearInterval(historyIntervalId);
   });
 };
 

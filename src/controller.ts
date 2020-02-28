@@ -2,10 +2,12 @@ import {EventEmitter} from 'events';
 import {CancelableRequest, Response} from 'got';
 import {Categories} from 'hap-nodejs';
 import {get} from 'lodash';
-import assert from 'src/utils/assert';
+import assert from 'assert';
 import frisquetConnectClientFactory, {Client as FrisqueConnectClient} from './client';
 import {FrisquetConnectPlatformConfig} from './platform';
 import {SiteResponse, Zone} from './typings/frisquetConnect';
+import {HomebridgeLog} from './typings/homebridge';
+import {dir} from './utils/debug';
 
 const SITE_INDEX = 0;
 const DEBOUNCE_TIME = 10 * 1e3;
@@ -29,12 +31,13 @@ export default class FrisquetConnectController extends EventEmitter {
   client: FrisqueConnectClient;
   config: FrisquetConnectPlatformConfig;
   devices: Set<string>;
-  log: typeof console;
+  log: HomebridgeLog;
   sitePromise?: CancelableRequest<Response<SiteResponse>>;
   siteTime: number = 0;
-  constructor(log: typeof console, config: FrisquetConnectPlatformConfig) {
+  constructor(log: HomebridgeLog, config: FrisquetConnectPlatformConfig) {
     super();
     this.config = config;
+    dir({config});
     this.log = log;
     this.devices = new Set();
     this.client = frisquetConnectClientFactory(log, config);

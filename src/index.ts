@@ -1,3 +1,4 @@
+import fakegatoHistory from 'fakegato-history';
 import {PLATFORM_NAME, PLUGIN_NAME} from 'src/config/env';
 import FrisquetConnectPlatform from './platform';
 
@@ -8,5 +9,6 @@ interface Homebridge {
 }
 
 export default (homebridge: Homebridge) => {
+  FrisquetConnectPlatform.HistoryService = fakegatoHistory(homebridge);
   homebridge.registerPlatform(PLUGIN_NAME, PLATFORM_NAME, FrisquetConnectPlatform, true);
 };

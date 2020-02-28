@@ -13,13 +13,18 @@ import {PlatformAccessory} from 'src/typings/homebridge';
 import {
   addAccessoryService,
   setupAccessoryIdentifyHandler,
-  setupAccessoryInformationService
+  setupAccessoryInformationService,
+  setupAccessoryTemperatureHistoryService
 } from 'src/utils/accessory';
 import debug from 'src/utils/debug';
+import {FakeGatoHistoryService} from 'fakegato-history';
+import {DEFAULT_HEATING_DELTA} from 'src/config/env';
 
-const HEATING_DELTA = 10;
-
-export const setupThermostat = (accessory: PlatformAccessory, controller: FrisquetConnectController): void => {
+export const setupThermostat = (
+  accessory: PlatformAccessory,
+  controller: FrisquetConnectController,
+  HistoryService?: FakeGatoHistoryService
+): void => {
   const {UUID: id, context} = accessory;
 
   const {deviceId} = context as FrisquetConnectAccessoryContext;
@@ -27,7 +32,7 @@ export const setupThermostat = (accessory: PlatformAccessory, controller: Frisqu
   setupAccessoryIdentifyHandler(accessory, controller);
 
   // Add the actual accessory Service
-  const service = addAccessoryService(accessory, Service.Thermostat, `${accessory.displayName}`, true);
+  const service = addAccessoryService(accessory, Service.Thermostat, {name: `${accessory.displayName}`});
   const {TargetHeatingCoolingState, CurrentHeatingCoolingState, TargetTemperature, CurrentTemperature} = Characteristic;
 
   service
@@ -42,7 +47,7 @@ export const setupThermostat = (accessory: PlatformAccessory, controller: Frisqu
         assert(settings.TAMB, 'Missing `carac_zone.TAMB` value');
         callback(
           null,
-          settings.CAMB > settings.TAMB + HEATING_DELTA
+          settings.CAMB > settings.TAMB + DEFAULT_HEATING_DELTA
             ? CurrentHeatingCoolingState.HEAT
             : CurrentHeatingCoolingState.OFF
         );
@@ -106,4 +111,7 @@ export const setupThermostat = (accessory: PlatformAccessory, controller: Frisqu
         callback(err);
       }
     });
+
+  // Add the history Service
+  setupAccessoryTemperatureHistoryService(accessory, controller, service, HistoryService);
 };
