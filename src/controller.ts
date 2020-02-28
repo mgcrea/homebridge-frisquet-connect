@@ -37,7 +37,6 @@ export default class FrisquetConnectController extends EventEmitter {
   constructor(log: HomebridgeLog, config: FrisquetConnectPlatformConfig) {
     super();
     this.config = config;
-    dir({config});
     this.log = log;
     this.devices = new Set();
     this.client = frisquetConnectClientFactory(log, config);
