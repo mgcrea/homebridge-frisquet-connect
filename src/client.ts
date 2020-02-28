@@ -9,6 +9,8 @@ export type Client = Got & {
   login: () => Promise<{token: string; utilisateur: Record<string, unknown>}>;
 };
 
+type LoginResponse = {utilisateur: Record<string, unknown>; token: string};
+
 const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig): Client => {
   const {hostname = DEFAULT_HOSTNAME, username, password} = config;
   assert(hostname, 'Missing "hostname" config field for platform');
@@ -70,7 +72,7 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
 
   instance.login = async () => {
     const searchParams = {appId: DEFAULT_APP_ID};
-    const {body} = await instance.post('authentifications', {
+    const {body} = await instance.post<LoginResponse>('authentifications', {
       json: {
         locale: 'fr',
         email: username,
