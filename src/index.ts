@@ -1,3 +1,4 @@
+import 'source-map-support/register';
 import fakegatoHistory from 'fakegato-history';
 import {PLATFORM_NAME, PLUGIN_NAME} from 'src/config/env';
 import FrisquetConnectPlatform from './platform';

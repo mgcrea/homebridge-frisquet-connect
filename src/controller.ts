@@ -44,6 +44,7 @@ export default class FrisquetConnectController extends EventEmitter {
   async getSite(): Promise<SiteResponse> {
     const {siteId} = this.config;
     this.siteTime = Date.now();
+    this.log.info(`Performing GET request on "sites/${siteId}"`);
     this.sitePromise = this.client.get(`sites/${siteId}`);
     const {body} = await this.sitePromise;
     return body as SiteResponse;
@@ -62,7 +63,7 @@ export default class FrisquetConnectController extends EventEmitter {
   }
   async getZone(deviceId: string): Promise<Zone> {
     const {zones} = await this.getDebouncedSite();
-    return zones.find(zone => zone.identifiant === deviceId) as Zone;
+    return zones.find((zone) => zone.identifiant === deviceId) as Zone;
   }
   getAccessoryId(deviceId: string) {
     const {siteId} = this.config;
@@ -96,7 +97,7 @@ export default class FrisquetConnectController extends EventEmitter {
       } as ControllerDevicePayload);
     }
 
-    zones.forEach(zone => {
+    zones.forEach((zone) => {
       const {id, identifiant, nom: name} = zone;
       const deviceId = identifiant;
       this.devices.add(deviceId);

@@ -1,5 +1,5 @@
 import {Categories} from 'hap-nodejs';
-import {PLATFORM_NAME, PLUGIN_NAME, DEFAULT_HISTORY_INTERVAL} from './config/env';
+import {PLATFORM_NAME, PLUGIN_NAME, DEFAULT_HISTORY_INTERVAL, DEFAULT_HISTORY_DISABLED} from './config/env';
 import FrisquetConnectController, {ControllerDevicePayload, FrisquetConnectAccessoryContext} from './controller';
 import {HomebridgeApi, Platform, PlatformAccessory, HomebridgeLog} from './typings/homebridge';
 import {getFrisquetConnectAccessorySetup} from './utils/accessory';
@@ -28,7 +28,10 @@ export default class FrisquetConnectPlatform implements Platform {
 
   constructor(log: HomebridgeLog, config: FrisquetConnectPlatformConfig, api: HomebridgeApi) {
     // Expose args
-    this.config = Object.assign({historyInterval: DEFAULT_HISTORY_INTERVAL, historyDisabled: false}, config);
+    this.config = Object.assign(
+      {historyInterval: DEFAULT_HISTORY_INTERVAL, historyDisabled: DEFAULT_HISTORY_DISABLED},
+      config
+    );
     this.log = log;
     this.api = api;
     // Internal
@@ -44,15 +47,15 @@ export default class FrisquetConnectPlatform implements Platform {
     this.controller = new FrisquetConnectController(log, this.config) as FrisquetConnectController;
     // Prevent configureAccessory getting called after node ready
     this.api.on('didFinishLaunching', () => setTimeout(() => this.didFinishLaunching(), 16));
-    this.controller.on('connect', () => {
-      this.log.info();
-    });
+    // this.controller.on('connect', () => {
+    //   this.log.info();
+    // });
     this.controller.on('device', this.handleControllerDevice.bind(this));
   }
   async didFinishLaunching() {
     this.cleanupAccessoriesIds = new Set(this.accessories.keys());
     await this.controller!.scan();
-    this.cleanupAccessoriesIds.forEach(accessoryId => {
+    this.cleanupAccessoriesIds.forEach((accessoryId) => {
       const accessory = this.accessories.get(accessoryId)!;
       this.log.warn(`Deleting missing accessory with id="${accessoryId}"`);
       // accessory.updateReachability(false);

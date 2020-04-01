@@ -106,14 +106,16 @@ export const setupAccessoryTemperatureHistoryService = (
   HistoryService?: FakeGatoHistoryService
 ): void => {
   const {historyDisabled, historyInterval} = controller.config;
+  // const {context} = accessory;
   if (historyDisabled) {
     controller.log.warn(`Accessory named="${accessory.displayName}" history is disabled`);
     return;
   }
   assert(HistoryService);
+  const actualHistoryInterval = Math.max(5, historyInterval) * 1000;
   // Setup history
   controller.log.info(
-    `Setting up accessory named="${accessory.displayName}" history with interval=${historyInterval}s`
+    `Setting up accessory named="${accessory.displayName}" history with interval=${actualHistoryInterval}s`
   );
   // @ts-ignore
   const historyService = new (HistoryService as FakeGatoHistoryService)('weather', accessory, {
@@ -133,7 +135,7 @@ export const setupAccessoryTemperatureHistoryService = (
         controller.log.debug(`Accessory named="${accessory.displayName}" has added entry="${JSON.stringify(entry)}"`);
       }
     });
-  }, Math.max(5, historyInterval) * 1000);
+  }, actualHistoryInterval);
   // Setup cleanup
   process.on('SIGINT', () => {
     clearInterval(historyIntervalId);

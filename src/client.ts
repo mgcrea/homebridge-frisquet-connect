@@ -1,9 +1,10 @@
 import assert from 'assert';
 import got, {Got} from 'got';
 import debug from 'src/utils/debug';
-import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT} from './config/env';
+import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT, HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD} from './config/env';
 import {FrisquetConnectPlatformConfig} from './platform';
-import {HomebridgeLog} from './typings/homebridge';
+import {HomebridgeLog} from 'src/typings/homebridge';
+import {decode} from 'src/utils/hash';
 
 export type Client = Got & {
   login: () => Promise<{token: string; utilisateur: Record<string, unknown>}>;
@@ -12,9 +13,10 @@ export type Client = Got & {
 type LoginResponse = {utilisateur: Record<string, unknown>; token: string};
 
 const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig): Client => {
-  const {hostname = DEFAULT_HOSTNAME, username, password} = config;
+  const {hostname = DEFAULT_HOSTNAME, username, password: configPassword} = config;
   assert(hostname, 'Missing "hostname" config field for platform');
   assert(username, 'Missing "username" config field for platform');
+  const password = HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD ? decode(HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD) : configPassword;
   assert(password, 'Missing "password" config field for platform');
   debug(`Creating FrisquetConnect client with username="${username}" and hostname="${hostname}"`);
 
@@ -25,7 +27,7 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
     },
     hooks: {
       beforeRequest: [
-        options => {
+        (options) => {
           const {method, url} = options;
           log.info(`About to request url="${url}" with method="${method}"`);
         }
