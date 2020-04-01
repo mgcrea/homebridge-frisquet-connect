@@ -112,7 +112,7 @@ export const setupAccessoryTemperatureHistoryService = (
     return;
   }
   assert(HistoryService);
-  const actualHistoryInterval = Math.max(5, historyInterval) * 1000;
+  const actualHistoryInterval = Math.max(5 * 60, historyInterval) * 1000; // min. 5min
   // Setup history
   controller.log.info(
     `Setting up accessory named="${accessory.displayName}" history with interval=${actualHistoryInterval}s`
