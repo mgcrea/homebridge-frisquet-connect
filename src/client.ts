@@ -45,7 +45,7 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
             log.warn(`Encountered an UnauthorizedError with statusCode="${response.statusCode}"`);
             retryState.attemptCount++;
             await asyncWait(calculateDelay(retryState));
-            log.info(`About to rertry for the ${retryState.attemptCount}-th time`);
+            log.info(`About to retry for the ${retryState.attemptCount}-th time`);
             // Attempt a new login
             const {token} = await instance.login();
             const updatedOptions = setUpdatedOptions(token);
