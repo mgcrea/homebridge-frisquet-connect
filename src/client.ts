@@ -1,16 +1,20 @@
 import assert from 'assert';
-import got, {Got} from 'got';
+import got, {Got, RetryObject} from 'got';
 import debug from 'src/utils/debug';
 import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT, HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD} from './config/env';
 import {FrisquetConnectPlatformConfig} from './platform';
 import {HomebridgeLog} from 'src/typings/homebridge';
 import {decode} from 'src/utils/hash';
+import {asyncWait} from './utils/async';
 
 export type Client = Got & {
   login: () => Promise<{token: string; utilisateur: Record<string, unknown>}>;
 };
 
 type LoginResponse = {utilisateur: Record<string, unknown>; token: string};
+
+const calculateDelay = ({attemptCount}: Pick<RetryObject, 'attemptCount'>) =>
+  1000 * Math.pow(2, Math.max(1, attemptCount)) + Math.random() * 100;
 
 const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig): Client => {
   const {hostname = DEFAULT_HOSTNAME, username, password: configPassword} = config;
@@ -19,6 +23,8 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
   const password = HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD ? decode(HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD) : configPassword;
   assert(password, 'Missing "password" config field for platform');
   debug(`Creating FrisquetConnect client with username="${username}" and hostname="${hostname}"`);
+
+  const retryState = {attemptCount: 0};
 
   const instance = got.extend({
     prefixUrl: hostname,
@@ -37,15 +43,19 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
           // Unauthorized
           if ([401, 403].includes(response.statusCode)) {
             log.warn(`Encountered an UnauthorizedError with statusCode="${response.statusCode}"`);
+            retryState.attemptCount++;
+            await asyncWait(calculateDelay(retryState));
+            log.info(`About to rertry for the ${retryState.attemptCount}-th time`);
             // Attempt a new login
             const {token} = await instance.login();
             const updatedOptions = setUpdatedOptions(token);
+            log.info(`About to retry with token=${token}, updatedOptions=${JSON.stringify(updatedOptions)}`);
             // Make a new retry
+            await asyncWait(500);
             return retryWithMergedOptions(updatedOptions);
           } else if (![200, 201].includes(response.statusCode)) {
             log.warn(`Encountered an UnknownError with statusCode="${response.statusCode}"`);
           }
-
           // No changes otherwise
           return response;
         }
