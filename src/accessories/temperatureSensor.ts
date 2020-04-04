@@ -9,14 +9,14 @@ import {
   setupAccessoryInformationService,
   setupAccessoryTemperatureHistoryService
 } from 'src/utils/accessory';
-import debug from 'src/utils/debug';
+import {debugGet, debugGetResult} from 'src/utils/debug';
 
 export const setupTemperatureSensor = (
   accessory: PlatformAccessory,
   controller: FrisqueConnectController,
   HistoryService?: FakeGatoHistoryService
 ): void => {
-  const {UUID: id, context} = accessory;
+  const {displayName: name, UUID: id, context} = accessory;
 
   const {deviceId} = context as FrisquetConnectAccessoryContext;
   setupAccessoryInformationService(accessory, controller);
@@ -29,11 +29,13 @@ export const setupTemperatureSensor = (
   service
     .getCharacteristic(CurrentTemperature)!
     .on(CharacteristicEventTypes.GET, async (callback: NodeCallback<CharacteristicValue>) => {
-      debug(`-> GET CurrentTemperature for "${id}"`);
+      debugGet('CurrentTemperature', {name, id});
       try {
         const temperature = await controller.getEnvironment(deviceId);
         assert(temperature, 'Missing environment temperature');
-        callback(null, temperature / 10);
+        const nextValue = temperature / 10;
+        debugGetResult('CurrentTemperature', {name, id, value: nextValue});
+        callback(null, nextValue);
       } catch (err) {
         callback(err);
       }

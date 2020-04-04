@@ -1,4 +1,5 @@
 import assert from 'assert';
+import {FakeGatoHistoryService} from 'fakegato-history';
 import {
   Characteristic,
   CharacteristicEventTypes,
@@ -8,6 +9,7 @@ import {
   NodeCallback,
   Service
 } from 'hap-nodejs';
+import {DEFAULT_HEATING_DELTA} from 'src/config/env';
 import FrisquetConnectController, {FrisquetConnectAccessoryContext} from 'src/controller';
 import {PlatformAccessory} from 'src/typings/homebridge';
 import {
@@ -16,16 +18,14 @@ import {
   setupAccessoryInformationService,
   setupAccessoryTemperatureHistoryService
 } from 'src/utils/accessory';
-import debug from 'src/utils/debug';
-import {FakeGatoHistoryService} from 'fakegato-history';
-import {DEFAULT_HEATING_DELTA} from 'src/config/env';
+import {debugGet, debugGetResult, debugSet} from 'src/utils/debug';
 
 export const setupThermostat = (
   accessory: PlatformAccessory,
   controller: FrisquetConnectController,
   HistoryService?: FakeGatoHistoryService
 ): void => {
-  const {UUID: id, context} = accessory;
+  const {displayName: name, UUID: id, context} = accessory;
 
   const {deviceId} = context as FrisquetConnectAccessoryContext;
   setupAccessoryInformationService(accessory, controller);
@@ -37,20 +37,19 @@ export const setupThermostat = (
 
   service
     .getCharacteristic(CurrentHeatingCoolingState)!
-    // @ts-ignore
     .setProps({validValues: [0, 1]} as Partial<CharacteristicProps>) // [OFF, HEAT, COOL]
     .on(CharacteristicEventTypes.GET, async (callback: NodeCallback<CharacteristicValue>) => {
-      debug(`-> GET TargetHeatingCoolingState for "${id}"`);
+      debugGet('CurrentHeatingCoolingState', {name, id});
       try {
         const {carac_zone: settings} = await controller.getZone(deviceId);
         assert(settings.CAMB, 'Missing `carac_zone.CAMB` value');
         assert(settings.TAMB, 'Missing `carac_zone.TAMB` value');
-        callback(
-          null,
+        const nextValue =
           settings.CAMB > settings.TAMB + DEFAULT_HEATING_DELTA
             ? CurrentHeatingCoolingState.HEAT
-            : CurrentHeatingCoolingState.OFF
-        );
+            : CurrentHeatingCoolingState.OFF;
+        debugGetResult('CurrentHeatingCoolingState', {name, id, value: nextValue});
+        callback(null, nextValue);
       } catch (err) {
         callback(err);
       }
@@ -58,10 +57,9 @@ export const setupThermostat = (
 
   service
     .getCharacteristic(TargetHeatingCoolingState)!
-    // @ts-ignore
     .setProps({validValues: [0, 1]} as Partial<CharacteristicProps>) // [OFF, HEAT, COOL, AUTO]
     .on(CharacteristicEventTypes.GET, async (callback: NodeCallback<CharacteristicValue>) => {
-      debug(`-> GET TargetHeatingCoolingState for "${id}"`);
+      debugGet('TargetHeatingCoolingState', {name, id});
       const HEATING_MODES = [
         6, // normal
         7 // réduit
@@ -69,44 +67,49 @@ export const setupThermostat = (
       try {
         const {carac_zone: settings} = await controller.getZone(deviceId);
         assert(settings.MODE, 'Missing `carac_zone.MODE` value');
-        callback(
-          null,
-          HEATING_MODES.includes(settings.MODE) ? TargetHeatingCoolingState.HEAT : TargetHeatingCoolingState.OFF
-        );
+        const nextValue = HEATING_MODES.includes(settings.MODE)
+          ? TargetHeatingCoolingState.HEAT
+          : TargetHeatingCoolingState.OFF;
+        debugGetResult('TargetHeatingCoolingState', {name, id, value: nextValue});
+        callback(null, nextValue);
       } catch (err) {
         callback(err);
       }
     })
     .on(CharacteristicEventTypes.SET, async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-      debug(`-> SET TargetHeatingCoolingState value="${value}" for id="${id}"`);
+      debugSet('TargetHeatingCoolingState', {name, id, value});
       callback();
     });
 
   service
     .getCharacteristic(TargetTemperature)!
     .on(CharacteristicEventTypes.GET, async (callback: NodeCallback<CharacteristicValue>) => {
-      debug(`-> GET TargetTemperature for "${id}"`);
+      debugGet('TargetTemperature', {name, id});
       try {
         const {carac_zone: settings} = await controller.getZone(deviceId);
         assert(settings.CAMB, 'Missing `carac_zone.CAMB` value');
-        callback(null, settings.CAMB / 10);
+        const nextValue = settings.CAMB / 10;
+        debugGetResult('TargetTemperature', {name, id, value: nextValue});
+        callback(null, nextValue);
       } catch (err) {
         callback(err);
       }
     })
     .on(CharacteristicEventTypes.SET, async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
-      debug(`-> SET TargetTemperature value="${value}" for id="${id}"`);
+      debugSet('TargetTemperature', {name, id, value});
       callback();
     });
 
   service
     .getCharacteristic(CurrentTemperature)!
     .on(CharacteristicEventTypes.GET, async (callback: NodeCallback<CharacteristicValue>) => {
-      debug(`-> GET CurrentTemperature for "${id}"`);
+      debugGet('CurrentTemperature', {name, id});
       try {
         const {carac_zone: settings} = await controller.getZone(deviceId);
         assert(settings.TAMB, 'Missing `carac_zone.TAMB` value');
-        callback(null, settings.TAMB / 10);
+        const nextValue = settings.TAMB / 10;
+        debugGetResult('CurrentTemperature', {name, id, value: nextValue});
+        callback(null, nextValue);
       } catch (err) {
         callback(err);
       }
