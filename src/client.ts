@@ -1,10 +1,11 @@
 import assert from 'assert';
 import got, {Got, RetryObject} from 'got';
+import {get, unset} from 'lodash';
+import {HomebridgeLog} from 'src/typings/homebridge';
 import debug from 'src/utils/debug';
+import {decode} from 'src/utils/hash';
 import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT, HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD} from './config/env';
 import {FrisquetConnectPlatformConfig} from './platform';
-import {HomebridgeLog} from 'src/typings/homebridge';
-import {decode} from 'src/utils/hash';
 import {asyncWait} from './utils/async';
 
 export type Client = Got & {
@@ -48,7 +49,7 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
             log.info(`About to retry for the ${retryState.attemptCount}-th time`);
             // Attempt a new login
             const {token} = await instance.login();
-            const updatedOptions = setUpdatedOptions(token);
+            const updatedOptions = setDefaultToken(token);
             log.info(`About to retry with token=${token}, updatedOptions=${JSON.stringify(updatedOptions)}`);
             // Make a new retry
             await asyncWait(500);
@@ -70,7 +71,7 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
     mutableDefaults: true
   }) as Client;
 
-  const setUpdatedOptions = (token: string) => {
+  const setDefaultToken = (token: string) => {
     // Prepare updated options
     const updatedOptions = {
       searchParams: {
@@ -82,8 +83,16 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
     return updatedOptions;
   };
 
+  const clearDefaultToken = () => {
+    const {options: defaultOptions} = instance.defaults;
+    if (get(defaultOptions, 'searchParams.token')) {
+      unset(defaultOptions, 'searchParams.token');
+    }
+  };
+
   instance.login = async () => {
     const searchParams = {appId: DEFAULT_APP_ID};
+    clearDefaultToken();
     const {body} = await instance.post<LoginResponse>('authentifications', {
       json: {
         locale: 'fr',
@@ -94,7 +103,7 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
       searchParams
     });
     assert(body.token, 'Unexpected missing token in body response');
-    setUpdatedOptions(body.token);
+    setDefaultToken(body.token);
     return body;
   };
 
