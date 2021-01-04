@@ -10,15 +10,15 @@ import {
   Service
 } from 'hap-nodejs';
 import type {PlatformAccessory} from 'homebridge';
-import {DEFAULT_HEATING_DELTA} from 'src/config/env';
-import FrisquetConnectController, {FrisquetConnectAccessoryContext} from 'src/controller';
+import {DEFAULT_HEATING_DELTA} from '../config/env';
+import FrisquetConnectController, {FrisquetConnectAccessoryContext} from '../controller';
 import {
   addAccessoryService,
   setupAccessoryIdentifyHandler,
   setupAccessoryInformationService,
   setupAccessoryTemperatureHistoryService
-} from 'src/utils/accessory';
-import {debugGet, debugGetResult, debugSetResult} from 'src/utils/debug';
+} from '../utils/accessory';
+import {debugGet, debugGetResult, debugSetResult} from '../utils/debug';
 
 export const setupThermostat = (
   accessory: PlatformAccessory,

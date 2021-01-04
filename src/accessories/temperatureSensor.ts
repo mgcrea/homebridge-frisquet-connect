@@ -2,14 +2,14 @@ import assert from 'assert';
 import {FakeGatoHistoryService} from 'fakegato-history';
 import {Characteristic, CharacteristicEventTypes, CharacteristicValue, NodeCallback, Service} from 'hap-nodejs';
 import type {PlatformAccessory} from 'homebridge';
-import FrisqueConnectController, {FrisquetConnectAccessoryContext} from 'src/controller';
+import FrisqueConnectController, {FrisquetConnectAccessoryContext} from '../controller';
 import {
   addAccessoryService,
   setupAccessoryIdentifyHandler,
   setupAccessoryInformationService,
   setupAccessoryTemperatureHistoryService
-} from 'src/utils/accessory';
-import {debugGet, debugGetResult} from 'src/utils/debug';
+} from '../utils/accessory';
+import {debugGet, debugGetResult} from '../utils/debug';
 
 export const setupTemperatureSensor = (
   accessory: PlatformAccessory,

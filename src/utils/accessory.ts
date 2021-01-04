@@ -1,10 +1,10 @@
 import assert from 'assert';
 import {FakeGatoHistoryService} from 'fakegato-history';
 import type {PlatformAccessory, Service, WithUUID} from 'homebridge';
-import {setupTemperatureSensor} from 'src/accessories/temperatureSensor';
-import {setupThermostat} from 'src/accessories/thermostat';
-import FrisquetConnectController, {FrisquetConnectAccessoryContext} from 'src/controller';
-import debug from 'src/utils/debug';
+import {setupTemperatureSensor} from '../accessories/temperatureSensor';
+import {setupThermostat} from '../accessories/thermostat';
+import FrisquetConnectController, {FrisquetConnectAccessoryContext} from '../controller';
+import debug from '../utils/debug';
 import {
   AccessoryEventTypes,
   Categories,
