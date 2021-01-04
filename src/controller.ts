@@ -52,6 +52,7 @@ export default class FrisquetConnectController extends EventEmitter {
   async getDebouncedSite(): Promise<SiteResponse> {
     const now = Date.now();
     if (now < this.siteTime + DEBOUNCE_TIME) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const {body} = await this.sitePromise!;
       return body as SiteResponse;
     }
