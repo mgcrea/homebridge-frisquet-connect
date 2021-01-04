@@ -1,14 +1,5 @@
 import assert from 'assert';
 import {FakeGatoHistoryService} from 'fakegato-history';
-import {
-  Characteristic,
-  CharacteristicEventTypes,
-  CharacteristicProps,
-  CharacteristicSetCallback,
-  CharacteristicValue,
-  NodeCallback,
-  Service
-} from 'hap-nodejs';
 import type {PlatformAccessory} from 'homebridge';
 import {DEFAULT_HEATING_DELTA} from '../config/env';
 import FrisquetConnectController, {FrisquetConnectAccessoryContext} from '../controller';
@@ -19,6 +10,15 @@ import {
   setupAccessoryTemperatureHistoryService
 } from '../utils/accessory';
 import {debugGet, debugGetResult, debugSetResult} from '../utils/debug';
+import {
+  Characteristic,
+  CharacteristicEventTypes,
+  CharacteristicProps,
+  CharacteristicSetCallback,
+  CharacteristicValue,
+  NodeCallback,
+  Service
+} from '../utils/hap';
 
 export const setupThermostat = (
   accessory: PlatformAccessory,
