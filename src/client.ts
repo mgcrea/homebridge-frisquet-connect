@@ -1,7 +1,7 @@
 import assert from 'assert';
 import got, {Got, RetryObject} from 'got';
+import type {Logging} from 'homebridge';
 import {get, unset} from 'lodash';
-import {HomebridgeLog} from 'src/typings/homebridge';
 import debug from 'src/utils/debug';
 import {decode} from 'src/utils/hash';
 import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT, HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD} from './config/env';
@@ -17,7 +17,7 @@ type LoginResponse = {utilisateur: Record<string, unknown>; token: string};
 const calculateDelay = ({attemptCount}: Pick<RetryObject, 'attemptCount'>) =>
   1000 * Math.pow(2, Math.max(1, attemptCount)) + Math.random() * 100;
 
-const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig): Client => {
+const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Client => {
   const {hostname = DEFAULT_HOSTNAME, username, password: configPassword} = config;
   assert(hostname, 'Missing "hostname" config field for platform');
   assert(username, 'Missing "username" config field for platform');
@@ -36,7 +36,7 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
       beforeRequest: [
         (options) => {
           const {method, url} = options;
-          log.info(`About to request url="${url}" with method="${method}"`);
+          debug(`About to request url="${url}" with method="${method}"`);
         }
       ],
       afterResponse: [
@@ -46,11 +46,11 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
             log.warn(`Encountered an UnauthorizedError with statusCode="${response.statusCode}"`);
             retryState.attemptCount++;
             await asyncWait(calculateDelay(retryState));
-            log.info(`About to retry for the ${retryState.attemptCount}-th time`);
+            debug(`About to retry for the ${retryState.attemptCount}-th time`);
             // Attempt a new login
             const {token} = await instance.login();
             const updatedOptions = setDefaultToken(token);
-            log.info(`About to retry with token=${token}, updatedOptions=${JSON.stringify(updatedOptions)}`);
+            debug(`About to retry with token=${token}, updatedOptions=${JSON.stringify(updatedOptions)}`);
             // Make a new retry
             await asyncWait(500);
             return retryWithMergedOptions(updatedOptions);
@@ -98,7 +98,7 @@ const clientFactory = (log: HomebridgeLog, config: FrisquetConnectPlatformConfig
         locale: 'fr',
         email: username,
         password,
-        type_client: 'IOS' // eslint-disable-line @typescript-eslint/camelcase
+        type_client: 'IOS'
       },
       searchParams
     });

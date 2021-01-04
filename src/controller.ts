@@ -1,12 +1,12 @@
+import assert from 'assert';
 import {EventEmitter} from 'events';
 import {CancelableRequest, Response} from 'got';
-import {Categories} from 'hap-nodejs';
+import type {Logging} from 'homebridge';
 import {get} from 'lodash';
-import assert from 'assert';
 import frisquetConnectClientFactory, {Client as FrisqueConnectClient} from './client';
 import {FrisquetConnectPlatformConfig} from './platform';
 import {SiteResponse, Zone} from './typings/frisquetConnect';
-import {HomebridgeLog} from './typings/homebridge';
+import {Categories} from './utils/hap';
 
 const SITE_INDEX = 0;
 const DEBOUNCE_TIME = 10 * 1e3;
@@ -30,10 +30,10 @@ export default class FrisquetConnectController extends EventEmitter {
   client: FrisqueConnectClient;
   config: FrisquetConnectPlatformConfig;
   devices: Set<string>;
-  log: HomebridgeLog;
+  log: Logging;
   sitePromise?: CancelableRequest<Response<SiteResponse>>;
   siteTime: number = 0;
-  constructor(log: HomebridgeLog, config: FrisquetConnectPlatformConfig) {
+  constructor(log: Logging, config: FrisquetConnectPlatformConfig) {
     super();
     this.config = config;
     this.log = log;
@@ -45,7 +45,7 @@ export default class FrisquetConnectController extends EventEmitter {
     const {siteId} = this.config;
     this.siteTime = Date.now();
     this.log.info(`Performing GET request on "sites/${siteId}"`);
-    this.sitePromise = this.client.get(`sites/${siteId}`);
+    this.sitePromise = this.client.get<SiteResponse>(`sites/${siteId}`);
     const {body} = await this.sitePromise;
     return body as SiteResponse;
   }
@@ -65,11 +65,11 @@ export default class FrisquetConnectController extends EventEmitter {
     const {zones} = await this.getDebouncedSite();
     return zones.find((zone) => zone.identifiant === deviceId) as Zone;
   }
-  getAccessoryId(deviceId: string) {
+  getAccessoryId(deviceId: string): string {
     const {siteId} = this.config;
     return `FrisquetConnect:${siteId.slice(6)}:accessories:${deviceId}`;
   }
-  async scan() {
+  async scan(): Promise<void> {
     const {utilisateur} = await this.client.login();
     const siteId = get(utilisateur, `sites.${SITE_INDEX}.identifiant_chaudiere`, '') as string;
     assert(siteId, 'Unexpected missing "siteId" in login response');

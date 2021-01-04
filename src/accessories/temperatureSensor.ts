@@ -1,8 +1,8 @@
 import assert from 'assert';
 import {FakeGatoHistoryService} from 'fakegato-history';
 import {Characteristic, CharacteristicEventTypes, CharacteristicValue, NodeCallback, Service} from 'hap-nodejs';
+import type {PlatformAccessory} from 'homebridge';
 import FrisqueConnectController, {FrisquetConnectAccessoryContext} from 'src/controller';
-import {PlatformAccessory} from 'src/typings/homebridge';
 import {
   addAccessoryService,
   setupAccessoryIdentifyHandler,
@@ -16,25 +16,25 @@ export const setupTemperatureSensor = (
   controller: FrisqueConnectController,
   HistoryService?: FakeGatoHistoryService
 ): void => {
-  const {displayName: name, UUID: id, context} = accessory;
+  const {context} = accessory;
 
   const {deviceId} = context as FrisquetConnectAccessoryContext;
   setupAccessoryInformationService(accessory, controller);
   setupAccessoryIdentifyHandler(accessory, controller);
 
   // Add the actual accessory Service
-  const service = addAccessoryService(accessory, Service.TemperatureSensor, {name: `${accessory.displayName}`});
+  const service = addAccessoryService(accessory, Service.TemperatureSensor, `${accessory.displayName}`);
   const {CurrentTemperature} = Characteristic;
 
   service
-    .getCharacteristic(CurrentTemperature)!
+    .getCharacteristic(CurrentTemperature)
     .on(CharacteristicEventTypes.GET, async (callback: NodeCallback<CharacteristicValue>) => {
-      debugGet('CurrentTemperature', {name, id});
+      debugGet(CurrentTemperature, service);
       try {
         const temperature = await controller.getEnvironment(deviceId);
         assert(temperature, 'Missing environment temperature');
         const nextValue = temperature / 10;
-        debugGetResult('CurrentTemperature', {name, id, value: nextValue});
+        debugGetResult(CurrentTemperature, service, nextValue);
         callback(null, nextValue);
       } catch (err) {
         callback(err);

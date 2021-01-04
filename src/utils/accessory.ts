@@ -1,31 +1,26 @@
 import assert from 'assert';
 import {FakeGatoHistoryService} from 'fakegato-history';
+import type {PlatformAccessory, Service, WithUUID} from 'homebridge';
+import {setupTemperatureSensor} from 'src/accessories/temperatureSensor';
+import {setupThermostat} from 'src/accessories/thermostat';
+import FrisquetConnectController, {FrisquetConnectAccessoryContext} from 'src/controller';
+import debug from 'src/utils/debug';
 import {
   AccessoryEventTypes,
   Categories,
   Characteristic,
   CharacteristicEventTypes,
-  Service,
-  VoidCallback
-} from 'hap-nodejs';
-import {setupTemperatureSensor} from 'src/accessories/temperatureSensor';
-import {setupThermostat} from 'src/accessories/thermostat';
-import FrisquetConnectController, {FrisquetConnectAccessoryContext} from 'src/controller';
-import {PlatformAccessory} from 'src/typings/homebridge';
-import debug from 'src/utils/debug';
+  Service as ServiceStatics
+} from '../utils/hap';
 
-type AddAccessoryOptions = {
-  name?: string;
-  subtype?: string;
-  removeExisting?: boolean;
-};
+export type ServiceClass = WithUUID<typeof Service>;
 
 export const addAccessoryService = (
   accessory: PlatformAccessory,
-  service: Service | typeof Service,
-  options: AddAccessoryOptions = {}
-) => {
-  const {name, subtype, removeExisting = true} = options;
+  service: ServiceClass,
+  name: string,
+  removeExisting: boolean = false
+): Service => {
   const existingService = accessory.getService(service);
   if (existingService) {
     if (!removeExisting) {
@@ -33,17 +28,17 @@ export const addAccessoryService = (
     }
     accessory.removeService(existingService);
   }
-  return accessory.addService(service, name, subtype);
+  return accessory.addService(service, name);
 };
 
 export const addAccessoryServiceWithSubtype = (
   accessory: PlatformAccessory,
-  service: typeof Service,
-  options: AddAccessoryOptions = {}
-) => {
-  const {name, subtype, removeExisting = true} = options;
-  const existingService = accessory.getServiceByUUIDAndSubType(service, subtype);
-  console.dir({existingService});
+  service: ServiceClass,
+  name: string,
+  subtype: string,
+  removeExisting: boolean = false
+): Service => {
+  const existingService = accessory.getServiceById(service, subtype);
   if (existingService) {
     if (!removeExisting) {
       return existingService;
@@ -78,7 +73,7 @@ export const setupAccessoryInformationService = (
   const {context} = accessory;
   const {manufacturer, serialNumber, model} = context as FrisquetConnectAccessoryContext;
 
-  const informationService = accessory.getService(Service.AccessoryInformation);
+  const informationService = accessory.getService(ServiceStatics.AccessoryInformation);
   assert(informationService, `Did not found AccessoryInformation service`);
   informationService
     .setCharacteristic(Characteristic.Manufacturer, manufacturer)
@@ -86,16 +81,17 @@ export const setupAccessoryInformationService = (
     .setCharacteristic(Characteristic.Model, model);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const setupAccessoryIdentifyHandler = (
   accessory: PlatformAccessory,
   _controller: FrisquetConnectController
 ): void => {
   const {displayName: name, UUID: id} = accessory;
   // listen for the "identify" event for this Accessory
-  accessory.on(AccessoryEventTypes.IDENTIFY, async (paired: boolean, callback: VoidCallback) => {
-    debug({id, type: 'AccessoryEventTypes.IDENTIFY', paired});
+  accessory.on(AccessoryEventTypes.IDENTIFY, (/* paired: boolean, callback: VoidCallback */) => {
+    // debug({id, type: 'AccessoryEventTypes.IDENTIFY', paired});
     debug(`New identify request for device named="${name}" with id="${id}"`);
-    callback();
+    // callback();
   });
 };
 
@@ -117,13 +113,13 @@ export const setupAccessoryTemperatureHistoryService = (
   controller.log.info(
     `Setting up accessory named="${accessory.displayName}" history with interval=${actualHistoryInterval}s`
   );
-  // @ts-ignore
+  // @ts-expect-error fake-gato
   const historyService = new (HistoryService as FakeGatoHistoryService)('weather', accessory, {
     storage: 'fs'
   });
   const historyIntervalId = setInterval(() => {
     controller.log.info(`Accessory named="${accessory.displayName}" is performing an history update`);
-    const currentTemperature = service.getCharacteristic(Characteristic.CurrentTemperature) as Characteristic;
+    const currentTemperature = service.getCharacteristic(Characteristic.CurrentTemperature);
     currentTemperature.emit(CharacteristicEventTypes.GET, (err: Error | null, value: number) => {
       if (err || typeof value === 'undefined') {
         return;
