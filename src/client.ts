@@ -1,21 +1,18 @@
 import assert from 'assert';
-import got, {Got, RetryObject} from 'got';
+import got, {Got} from 'got';
 import type {Logging} from 'homebridge';
 import {get, unset} from 'lodash';
 import debug from './utils/debug';
 import {decode} from './utils/hash';
 import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT, HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD} from './config/env';
 import {FrisquetConnectPlatformConfig} from './platform';
-import {asyncWait} from './utils/async';
+import {asyncWait, calculateDelay} from './utils/async';
 
 export type Client = Got & {
   login: () => Promise<{token: string; utilisateur: Record<string, unknown>}>;
 };
 
 type LoginResponse = {utilisateur: Record<string, unknown>; token: string};
-
-const calculateDelay = ({attemptCount}: Pick<RetryObject, 'attemptCount'>) =>
-  Math.min(1000 * Math.pow(2, Math.max(1, attemptCount)) + Math.random() * 100, Math.pow(2, 31) - 1);
 
 const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Client => {
   const {hostname = DEFAULT_HOSTNAME, username, password: configPassword} = config;
