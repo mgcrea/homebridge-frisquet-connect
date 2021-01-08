@@ -15,7 +15,7 @@ export type Client = Got & {
 type LoginResponse = {utilisateur: Record<string, unknown>; token: string};
 
 const calculateDelay = ({attemptCount}: Pick<RetryObject, 'attemptCount'>) =>
-  1000 * Math.pow(2, Math.max(1, attemptCount)) + Math.random() * 100;
+  Math.min(1000 * Math.pow(2, Math.max(1, attemptCount)) + Math.random() * 100, Math.pow(2, 31) - 1);
 
 const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Client => {
   const {hostname = DEFAULT_HOSTNAME, username, password: configPassword} = config;
