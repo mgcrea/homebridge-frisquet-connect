@@ -40,17 +40,22 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
         async (response, retryWithMergedOptions) => {
           // Unauthorized
           if ([401, 403].includes(response.statusCode)) {
-            log.warn(`Encountered an UnauthorizedError with statusCode="${response.statusCode}"`);
-            retryState.attemptCount++;
-            await asyncWait(calculateDelay(retryState));
-            debug(`About to retry for the ${retryState.attemptCount}-th time`);
-            // Attempt a new login
-            const {token} = await instance.login();
-            const updatedOptions = setDefaultToken(token);
-            debug(`About to retry with token=${token}, updatedOptions=${JSON.stringify(updatedOptions)}`);
-            // Make a new retry
-            await asyncWait(500);
-            return retryWithMergedOptions(updatedOptions);
+            log.warn(`Encountered an UnauthorizedError with statusCode="${response.statusCode}", will retry`);
+            try {
+              retryState.attemptCount++;
+              await asyncWait(calculateDelay(retryState));
+              debug(`About to retry for the ${retryState.attemptCount}-th time`);
+              // Attempt a new login
+              const {token} = await instance.login();
+              const updatedOptions = setDefaultToken(token);
+              debug(`About to retry with token=${token}, updatedOptions=${JSON.stringify(updatedOptions)}`);
+              // Make a new retry
+              await asyncWait(500);
+              return retryWithMergedOptions(updatedOptions);
+            } catch (err) {
+              log.warn(`Failed to retry with error: ${err.name}`);
+              log.debug(err.stack || err);
+            }
           } else if (![200, 201].includes(response.statusCode)) {
             log.warn(`Encountered an UnknownError with statusCode="${response.statusCode}"`);
           }

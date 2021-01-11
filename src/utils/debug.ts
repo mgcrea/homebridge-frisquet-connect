@@ -7,7 +7,7 @@ import type {PlatformAccessory, Service} from 'homebridge';
 
 type IdentifiableAccessoryObject = PlatformAccessory | Service;
 
-export const debug = createDebug('homebridge-tydom');
+export const debug = createDebug('homebridge-frisquet-connect');
 
 export default debug;
 
