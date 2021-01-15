@@ -1,12 +1,11 @@
 import assert from 'assert';
 import got, {Got} from 'got';
 import type {Logging} from 'homebridge';
-import {get, unset} from 'lodash';
-import debug from './utils/debug';
-import {decode} from './utils/hash';
 import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT, HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD} from './config/env';
 import {FrisquetConnectPlatformConfig} from './platform';
 import {asyncWait, calculateDelay} from './utils/async';
+import debug from './utils/debug';
+import {decode} from './utils/hash';
 
 export type Client = Got & {
   login: () => Promise<{token: string; utilisateur: Record<string, unknown>}>;
@@ -38,9 +37,11 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
       ],
       afterResponse: [
         async (response, retryWithMergedOptions) => {
+          const {statusCode, url} = response;
+          debug(`Received a statusCode=${statusCode} for request url="${url}"`);
           // Unauthorized
-          if ([401, 403].includes(response.statusCode)) {
-            log.warn(`Encountered an UnauthorizedError with statusCode="${response.statusCode}", will retry`);
+          if ([401, 403].includes(statusCode)) {
+            log.warn(`Encountered an UnauthorizedError with statusCode="${statusCode}", will retry`);
             try {
               retryState.attemptCount++;
               await asyncWait(calculateDelay(retryState));
@@ -56,8 +57,8 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
               log.warn(`Failed to retry with error: ${err.name}`);
               log.debug(err.stack || err);
             }
-          } else if (![200, 201].includes(response.statusCode)) {
-            log.warn(`Encountered an UnknownError with statusCode="${response.statusCode}"`);
+          } else if (![200, 201].includes(statusCode)) {
+            log.warn(`Encountered an UnknownError with statusCode="${statusCode}"`);
           }
           // No changes otherwise
           return response;
@@ -86,9 +87,9 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
   };
 
   const clearDefaultToken = () => {
-    const {options: defaultOptions} = instance.defaults;
-    if (get(defaultOptions, 'searchParams.token')) {
-      unset(defaultOptions, 'searchParams.token');
+    const {searchParams} = instance.defaults.options;
+    if (searchParams) {
+      searchParams.delete('token');
     }
   };
 
