@@ -1,38 +1,49 @@
 {
-  "pluginAlias": "Tydom",
+  "pluginAlias": "FrisquetConnect",
   "pluginType": "platform",
   "singular": true,
-  "headerDisplay": "Homebridge plugin to manage Tydom devices by Delta Dore",
-  "footerDisplay": "For a detailed description, see the [wiki](https://github.com/mgcrea/homebridge-tydom/wiki/Configuration)",
+  "headerDisplay": "Homebridge plugin to manage Frisquet devices via FrisquetConenct",
+  "footerDisplay": "For a detailed description, see the [GitHub](https://github.com/mgcrea/homebridge-frisquet-connect)",
   "schema": {
     "type": "object",
     "properties": {
       "hostname": {
-        "title": "Tydom hostname",
+        "title": "Frisquet Connect hostname",
         "type": "string",
         "required": true,
-        "default": "mediation.tydom.com"
+        "default": "https://fcutappli.frisquet.com/api/v1"
       },
       "username": {
-        "title": "Tydom username",
+        "title": "Frisquet Connect username",
         "type": "string",
         "required": true,
-        "default": ""
+        "default": "foo@bar.com"
       },
       "password": {
-        "title": "Tydom password",
+        "title": "Frisquet Connect password",
         "type": "string",
         "required": true,
         "default": ""
       },
-      "settings": {
-        "description": "Device settings",
-        "type": "object",
-        "patternProperties": {
-          "^[0-9]+$": {"type": "object"}
-        }
+      "historyInterval": {
+        "title": "History interval",
+        "type": "number",
+        "required": false,
+        "default": 900
+      },
+      "historyDisabled": {
+        "title": "History disabled",
+        "type": "string",
+        "required": false,
+        "default": false
       }
     }
   },
-  "form": ["hostname", "username", "password", "settings"]
+  "form": [
+    "hostname",
+    "username",
+    "password",
+    "historyInterval",
+    "historyDisabled"
+  ]
 }
