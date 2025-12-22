@@ -9,7 +9,6 @@ import {
   AccessoryEventTypes,
   Categories,
   Characteristic,
-  CharacteristicEventTypes,
   Service as ServiceStatics
 } from '../utils/hap';
 
@@ -28,7 +27,7 @@ export const addAccessoryService = (
     }
     accessory.removeService(existingService);
   }
-  return accessory.addService(service, name);
+  return accessory.addService(service, name, '');
 };
 
 export const addAccessoryServiceWithSubtype = (
@@ -117,20 +116,20 @@ export const setupAccessoryTemperatureHistoryService = (
   const historyService = new (HistoryService as FakeGatoHistoryService)('weather', accessory, {
     storage: 'fs'
   });
-  const historyIntervalId = setInterval(() => {
+  const historyIntervalId = setInterval(async () => {
     controller.log.info(`Accessory named="${accessory.displayName}" is performing an history update`);
     const currentTemperature = service.getCharacteristic(Characteristic.CurrentTemperature);
-    currentTemperature.emit(CharacteristicEventTypes.GET, (err: Error | null, value: number) => {
-      if (err || typeof value === 'undefined') {
-        return;
-      }
-      if (value) {
+    try {
+      const value = await currentTemperature.handleGetRequest();
+      if (typeof value === 'number' && value) {
         const time = Math.floor(Date.now() / 1000);
         const entry = {time, temp: value, pressure: 0, humidity: 0};
         historyService.addEntry(entry);
         controller.log.debug(`Accessory named="${accessory.displayName}" has added entry="${JSON.stringify(entry)}"`);
       }
-    });
+    } catch (err) {
+      controller.log.warn(`Failed to get temperature for history: ${err}`);
+    }
   }, actualHistoryInterval);
   // Setup cleanup
   process.on('SIGINT', () => {
