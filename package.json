@@ -39,9 +39,8 @@
     "spec:watch": "npm run spec --watch",
     "spec:coverage": "npm run spec --coverage",
     "lint": "eslint src/",
-    "pretty": "prettier --check '{src,test}/**/*.ts'",
-    "pretty:fix": "prettier --write '{src,test}/**/*.ts'",
-    "typecheck": "tsc --noEmit",
+    "pretty": "prettier --check src/ test/",
+    "check": "tsc --noEmit",
     "build": "tsup",
     "prepare": "pnpm run build"
   },
