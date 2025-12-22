@@ -1,12 +1,12 @@
-import assert from 'assert';
-import {EventEmitter} from 'events';
-import {CancelableRequest, Response} from 'got';
-import type {Logging} from 'homebridge';
-import {get} from 'lodash';
-import frisquetConnectClientFactory, {Client as FrisqueConnectClient} from './client';
-import {FrisquetConnectPlatformConfig} from './platform';
-import {SiteResponse, Zone} from './typings/frisquetConnect';
-import {Categories} from './utils/hap';
+import assert from "assert";
+import { EventEmitter } from "events";
+import { CancelableRequest, Response } from "got";
+import type { Logging } from "homebridge";
+import { get } from "lodash";
+import frisquetConnectClientFactory, { Client as FrisqueConnectClient } from "./client";
+import { FrisquetConnectPlatformConfig } from "./platform";
+import { SiteResponse, Zone } from "./typings/frisquetConnect";
+import { Categories } from "./utils/hap";
 
 const SITE_INDEX = 0;
 const DEBOUNCE_TIME = 10 * 1e3;
@@ -32,7 +32,7 @@ export default class FrisquetConnectController extends EventEmitter {
   devices: Set<string>;
   log: Logging;
   sitePromise?: CancelableRequest<Response<SiteResponse>>;
-  siteTime: number = 0;
+  siteTime = 0;
   constructor(log: Logging, config: FrisquetConnectPlatformConfig) {
     super();
     this.config = config;
@@ -42,64 +42,65 @@ export default class FrisquetConnectController extends EventEmitter {
   }
 
   async getSite(): Promise<SiteResponse> {
-    const {siteId} = this.config;
+    const { siteId } = this.config;
     this.siteTime = Date.now();
     this.log.info(`Performing GET request on "sites/${siteId}"`);
     this.sitePromise = this.client.get<SiteResponse>(`sites/${siteId}`);
-    const {body} = await this.sitePromise;
-    return body as SiteResponse;
+    const { body } = await this.sitePromise;
+    return body;
   }
   async getDebouncedSite(): Promise<SiteResponse> {
     const now = Date.now();
     if (now < this.siteTime + DEBOUNCE_TIME) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const {body} = await this.sitePromise!;
-      return body as SiteResponse;
+      const { body } = await this.sitePromise!;
+      return body;
     }
     return this.getSite();
   }
   async getEnvironment(deviceId: string): Promise<number> {
-    const {environnement} = await this.getDebouncedSite();
+    const { environnement } = await this.getDebouncedSite();
     return get(environnement, deviceId, 0);
   }
   async getZone(deviceId: string): Promise<Zone> {
-    const {zones} = await this.getDebouncedSite();
-    return zones.find((zone) => zone.identifiant === deviceId) as Zone;
+    const { zones } = await this.getDebouncedSite();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return zones.find((zone) => zone.identifiant === deviceId)!;
   }
   getAccessoryId(deviceId: string): string {
-    const {siteId} = this.config;
+    const { siteId } = this.config;
     return `FrisquetConnect:${siteId.slice(6)}:accessories:${deviceId}`;
   }
   async scan(): Promise<void> {
-    const {utilisateur} = await this.client.login();
-    const siteId = get(utilisateur, `sites.${SITE_INDEX}.identifiant_chaudiere`, '') as string;
+    const { utilisateur } = await this.client.login();
+    const siteId = get(utilisateur, `sites.${SITE_INDEX}.identifiant_chaudiere`, "") as string;
     assert(siteId, 'Unexpected missing "siteId" in login response');
     this.config.siteId = siteId;
-    const {environnement, zones} = await this.getSite();
+    const { environnement, zones } = await this.getSite();
 
-    const externalTemp = get(environnement, 'T_EXT', null);
+    const externalTemp = get(environnement, "T_EXT", null);
     if (externalTemp) {
-      const deviceId = 'T_EXT';
-      const name = 'Sonde extérieure';
+      const deviceId = "T_EXT";
+      const name = "Sonde extérieure";
       this.devices.add(deviceId);
       const accessoryId = this.getAccessoryId(deviceId);
       const context: FrisquetConnectAccessoryContext = {
         name,
         deviceId,
         accessoryId,
-        manufacturer: 'Frisquet',
+        manufacturer: "Frisquet",
         serialNumber: `${siteId}.${deviceId}`,
-        model: `${deviceId}`
+        model: deviceId,
       };
-      this.emit('device', {
+      this.emit("device", {
         name,
         category: Categories.SENSOR,
-        context
+        context,
       } as ControllerDevicePayload);
     }
 
     zones.forEach((zone) => {
-      const {id, identifiant, nom: name} = zone;
+      const { id, identifiant, nom: name } = zone;
       const deviceId = identifiant;
       this.devices.add(deviceId);
       const accessoryId = this.getAccessoryId(deviceId);
@@ -107,14 +108,14 @@ export default class FrisquetConnectController extends EventEmitter {
         name,
         deviceId,
         accessoryId,
-        manufacturer: 'Frisquet',
+        manufacturer: "Frisquet",
         serialNumber: `${siteId}.${deviceId}`,
-        model: `${id}`
+        model: `${id}`,
       };
-      this.emit('device', {
+      this.emit("device", {
         name,
         category: Categories.THERMOSTAT,
-        context
+        context,
       } as ControllerDevicePayload);
     });
   }
