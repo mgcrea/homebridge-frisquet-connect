@@ -29,6 +29,9 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
     prefixUrl: hostname,
     headers: {
       "user-agent": DEFAULT_USER_AGENT,
+      accept: "*/*",
+      "accept-language": "FR",
+      "accept-encoding": "br;q=1.0, gzip;q=0.9, deflate;q=0.8",
     },
     hooks: {
       beforeRequest: [
@@ -97,10 +100,10 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
   };
 
   instance.login = async () => {
-    const searchParams = { appId: DEFAULT_APP_ID };
+    const searchParams = { app_id: DEFAULT_APP_ID };
     clearDefaultToken();
     const { body } = await instance.post<LoginResponse>("authentifications", {
-      json: {
+      form: {
         locale: "fr",
         email: username,
         password,
