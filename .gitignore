@@ -16,6 +16,7 @@ data/
 .env
 .build/
 build/
+dist/
 lib/
 tmp/
 
