@@ -37,7 +37,7 @@ export const setupTemperatureSensor = (
         debugGetResult(CurrentTemperature, service, nextValue);
         callback(null, nextValue);
       } catch (err) {
-        callback(err);
+        callback(err instanceof Error ? err : new Error(String(err)));
       }
     });
 

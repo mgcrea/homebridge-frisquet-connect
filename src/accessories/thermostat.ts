@@ -51,7 +51,7 @@ export const setupThermostat = (
         debugGetResult(CurrentHeatingCoolingState, service, nextValue);
         callback(null, nextValue);
       } catch (err) {
-        callback(err);
+        callback(err instanceof Error ? err : new Error(String(err)));
       }
     });
 
@@ -73,7 +73,7 @@ export const setupThermostat = (
         debugGetResult(TargetHeatingCoolingState, service, nextValue);
         callback(null, nextValue);
       } catch (err) {
-        callback(err);
+        callback(err instanceof Error ? err : new Error(String(err)));
       }
     })
     .on(CharacteristicEventTypes.SET, async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
@@ -93,7 +93,7 @@ export const setupThermostat = (
         debugGetResult(TargetTemperature, service, nextValue);
         callback(null, nextValue);
       } catch (err) {
-        callback(err);
+        callback(err instanceof Error ? err : new Error(String(err)));
       }
     })
     .on(CharacteristicEventTypes.SET, async (value: CharacteristicValue, callback: CharacteristicSetCallback) => {
@@ -113,7 +113,7 @@ export const setupThermostat = (
         debugGetResult(CurrentTemperature, service, nextValue);
         callback(null, nextValue);
       } catch (err) {
-        callback(err);
+        callback(err instanceof Error ? err : new Error(String(err)));
       }
     });
 
