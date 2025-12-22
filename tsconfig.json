@@ -1,9 +1,11 @@
 {
-  "extends": "@tsconfig/node10/tsconfig.json",
+  "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
     "declaration": true,
     "outDir": "./lib",
     "rootDir": "./src",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "baseUrl": "./",
     "paths": {
       "src/*": ["./src/*"]
