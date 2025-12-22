@@ -1,5 +1,5 @@
 import assert from 'assert';
-import got, {Got} from 'got';
+import got, {Got, type BeforeRequestHook, type AfterResponseHook} from 'got';
 import type {Logging} from 'homebridge';
 import {DEFAULT_APP_ID, DEFAULT_HOSTNAME, DEFAULT_USER_AGENT, HOMEBRIDGE_FRISQUET_CONNECT_PASSWORD} from './config/env';
 import {FrisquetConnectPlatformConfig} from './platform';
@@ -30,13 +30,13 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
     },
     hooks: {
       beforeRequest: [
-        (options) => {
+        ((options) => {
           const {method, url} = options;
           debug(`About to request url="${url}" with method="${method}"`);
-        }
+        }) satisfies BeforeRequestHook
       ],
       afterResponse: [
-        async (response, retryWithMergedOptions) => {
+        (async (response, retryWithMergedOptions) => {
           const {statusCode, url} = response;
           debug(`Received a statusCode=${statusCode} for request url="${url}"`);
           // Unauthorized
@@ -54,15 +54,16 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
               await asyncWait(500);
               return retryWithMergedOptions(updatedOptions);
             } catch (err) {
-              log.warn(`Failed to retry with error: ${err.name}`);
-              log.debug(err.stack || err);
+              const error = err as Error;
+              log.warn(`Failed to retry with error: ${error.name}`);
+              log.debug(error.stack || String(error));
             }
           } else if (![200, 201].includes(statusCode)) {
             log.warn(`Encountered an UnknownError with statusCode="${statusCode}"`);
           }
           // No changes otherwise
           return response;
-        }
+        }) satisfies AfterResponseHook
       ]
       // beforeRetry: [
       //   (options, error, retryCount) => {
@@ -82,13 +83,13 @@ const clientFactory = (log: Logging, config: FrisquetConnectPlatformConfig): Cli
       }
     };
     // Save for further requests
-    instance.defaults.options = got.mergeOptions(instance.defaults.options, updatedOptions);
+    instance.defaults.options.merge(updatedOptions);
     return updatedOptions;
   };
 
   const clearDefaultToken = () => {
     const {searchParams} = instance.defaults.options;
-    if (searchParams) {
+    if (searchParams instanceof URLSearchParams) {
       searchParams.delete('token');
     }
   };
