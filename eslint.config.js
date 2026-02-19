@@ -1,5 +1,5 @@
 // @ts-check
-import baseConfig from '@mgcrea/eslint-config-node';
+import baseConfig from "@mgcrea/eslint-config-node";
 
 /**
  * Eslint configuration
@@ -11,8 +11,8 @@ export default [
   {
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.json']
-      }
-    }
-  }
+        project: ["./tsconfig.json"],
+      },
+    },
+  },
 ];
