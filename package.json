@@ -11,8 +11,8 @@
     "homebridge-plugin"
   ],
   "engines": {
-    "node": ">=20.0.0",
-    "homebridge": ">=1.0.0"
+    "node": ">=18.20.4",
+    "homebridge": "^1.6.0 || ^2.0.0-beta.0"
   },
   "scripts": {
     "start": "NODE_TLS_REJECT_UNAUTHORIZED=0 DEBUG=homebridge-frisquet-connect homebridge -D -U ./.homebridge -P .",
@@ -20,7 +20,7 @@
     "start:watch": "nodemon --ext \"ts,tsx\" --watch \"lib/\" --exec \"yarn start\"",
     "start:prod": "npm run spec:watch",
     "clean": "rm -rf .homebridge/persist/* .homebridge/accessories/*",
-    "test": "npm run pretty && npm run lint && npm run spec",
+    "test": "npm run format && npm run lint && npm run spec",
     "spec": "NODE_TLS_REJECT_UNAUTHORIZED=0 CI=true jest --runInBand --colors --passWithNoTests",
     "spec:watch": "npm run spec --watch",
     "spec:coverage": "npm run spec --coverage",
@@ -35,8 +35,7 @@
     "debug": "^4.4.3",
     "fakegato-history": "^0.6.7",
     "got": "^14.6.5",
-    "lodash": "^4.17.21",
-    "source-map-support": "^0.5.21"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@mgcrea/eslint-config-node": "^0.14.1",
@@ -50,7 +49,7 @@
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
     "eslint": "^9.39.2",
-    "homebridge": "^1.11.1",
+    "homebridge": "^2.0.0-beta.0",
     "jest": "^30.2.0",
     "nock": "^14.0.10",
     "prettier": "^3.7.4",
