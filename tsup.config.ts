@@ -9,7 +9,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   target: "node20",
-  tsconfig: "tsconfig.json",
+  tsconfig: "tsconfig.build.json",
   esbuildOptions(options) {
     options.packages = "external";
   },
