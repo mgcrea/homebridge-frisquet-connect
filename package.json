@@ -11,7 +11,7 @@
     "homebridge-plugin"
   ],
   "engines": {
-    "node": ">=0.12.0",
+    "node": ">=20.0.0",
     "homebridge": ">=1.0.0"
   },
   "scripts": {
@@ -25,10 +25,10 @@
     "spec:watch": "npm run spec --watch",
     "spec:coverage": "npm run spec --coverage",
     "lint": "eslint src/",
-    "pretty": "prettier --check src/ test/",
+    "format": "prettier --check src/ test/",
     "check": "tsc --noEmit",
     "build": "tsup",
-    "prepare": "pnpm run build"
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "chalk": "^5.6.2",
