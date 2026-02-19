@@ -31,7 +31,7 @@ jobs:
         run: pnpm run lint
       - name: TypeScript 🔍
         run: pnpm run check
-      - name: Vitest 🔍
+      - name: Jest 🔍
         run: pnpm run spec
       - name: Upload coverage to Codecov 📊
         uses: codecov/codecov-action@v5

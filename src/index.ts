@@ -1,6 +1,5 @@
 import fakegatoHistory from "fakegato-history";
 import type { API as Homebridge } from "homebridge";
-import "source-map-support/register";
 import { PLATFORM_NAME, PLUGIN_NAME } from "./config/env";
 import FrisquetConnectPlatform from "./platform";
 import { defineHAPGlobals } from "./utils/hap";

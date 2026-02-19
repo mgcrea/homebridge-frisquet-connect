@@ -2,7 +2,7 @@
   "pluginAlias": "FrisquetConnect",
   "pluginType": "platform",
   "singular": true,
-  "headerDisplay": "Homebridge plugin to manage Frisquet devices via FrisquetConenct",
+  "headerDisplay": "Homebridge plugin to manage Frisquet devices via FrisquetConnect",
   "footerDisplay": "For a detailed description, see the [GitHub](https://github.com/mgcrea/homebridge-frisquet-connect)",
   "schema": {
     "type": "object",
@@ -33,7 +33,7 @@
       },
       "historyDisabled": {
         "title": "History disabled",
-        "type": "string",
+        "type": "boolean",
         "required": false,
         "default": false
       }

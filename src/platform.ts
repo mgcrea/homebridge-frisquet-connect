@@ -70,7 +70,6 @@ export default class FrisquetConnectPlatform implements DynamicPlatformPlugin {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const accessory = this.accessories.get(accessoryId)!;
       this.log.warn(`Deleting missing accessory with id="${accessoryId}"`);
-      // accessory.updateReachability(false);
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     });
     this.log.info(`Properly loaded ${this.accessories.size}-accessories`);
